@@ -1,0 +1,387 @@
+\documentclass[10pt]{article}
+
+\usepackage[margin=0.85in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\graphicspath{{../results/}}
+
+\title{Inverse-Dynamics-Critic-Guided Inference-Time Scaling\\for Humanoid Motion Generation}
+\author{CS 348K Project}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Kinematic humanoid motion generators such as MotionBricks can synthesize
+diverse Unitree G1 reference trajectories, but these references are not
+guaranteed to be dynamically executable. We study a test-time screening method
+with no generator or controller retraining: sample $K$ MotionBricks candidates, score each with a
+MuJoCo inverse-dynamics heuristic critic, and select the lowest-risk clip. On a
+39-identity K sweep, mean heuristic risk decreases from 38.90 at $K=1$ to 15.93
+at $K=8$, and heuristic-accepted clips increase from 5/39 to 26/39. A larger K=1/K=8
+extension over 105 paired motion identities reproduces the effect: mean risk
+decreases from 35.32 to 13.58, heuristic-accepted clips increase from 25/105 to 78/105,
+and 81/105 identities improve. A 105-row mode-seed audit over 15 unique local
+mode prompts shows K=8 broadly preserves trajectory/style proxies
+(mean 0.568 vs 0.583 for K=1),
+while a contact-quality audit improves artifact score from 0.274 to 0.248.
+The method is strongest on upright locomotion
+and expressive walking styles, weaker on crawling, and harmful for already
+stable idle clips. Controller experiments are negative controls: neither weak PD
+nor torque-limited computed-torque tracking validates per-clip critic scores.
+We also run the released SONIC G1 tracking-policy encoder/decoder in an
+approximate MuJoCo harness. After fixing the harness, K=8 is roughly neutral
+under learned-policy tracking on 105 K=1/K=8 pairs: mean survival changes from
+2.005s to 2.054s and RMSE from 0.339 to 0.334 rad, with 98/105 falls in both
+groups and 0\% torque saturation. A controller-aware oracle over the two
+available candidates improves survival to 2.299s and RMSE to 0.310 rad, while
+a four-way oracle over K=1/4/8/16 on the smaller 39-identity sweep improves
+survival from 2.134s to 2.833s ($p=1.9{\times}10^{-6}$).
+Therefore, the contribution is a transparent inverse-dynamics screening and
+ranking study plus evidence that controller-in-the-loop selection or
+planner-policy co-training is needed, not a claim of real-robot feasibility.
+Because selection and evaluation use related heuristic scores, the reported
+gains should be interpreted as successful risk reranking under this critic, not
+independent physical validation.
+\end{abstract}
+
+\section{Introduction}
+
+MotionBricks demonstrates real-time kinematic whole-body motion generation for
+animation and humanoid robotics, reporting high throughput and broad motion
+coverage \cite{motionbricks}. The current public G1 preview used here exposes a
+mode/control interface rather than a full arbitrary text endpoint. Its
+limitation section also points to a central robotics gap: kinematic planners can
+output motions that violate hardware or contact constraints. Recent Unitree G1
+pipelines address this by coupling
+kinematic motion sources to low-level controllers or physical plausibility
+optimization \cite{claw,roboforge}. This project investigates a smaller but
+practical intervention: can we reduce a fixed kinematic generator's
+inverse-dynamics heuristic risk at test time using an explicit dynamics-derived
+ranking signal?
+
+We treat MotionBricks as a sampler. The first candidate uses the default
+deterministic generation path. Additional candidates enable stochastic Gumbel
+pose-token sampling and offset the reference seed. Each candidate is a qpos
+sequence. A MuJoCo inverse-dynamics critic estimates required torques, root
+wrench, velocities, accelerations, and jerk under exact replay, then assigns a
+heuristic risk score. Best-of-$K$ selection keeps the candidate with lowest
+critic demand.
+
+The method is intentionally simple. Its value is not novelty in inverse
+dynamics itself, but a measured characterization of inference-time scaling for
+humanoid kinematic references, including failures and negative controls.
+
+\section{Related Work}
+
+\paragraph{Kinematic humanoid generation.}
+MotionBricks uses a modular latent generative backbone and smart primitives for
+real-time motion generation, with a public G1 demo and MotionBricks-powered
+motion generation in NVIDIA's GR00T Whole-Body Control stack \cite{motionbricks}.
+CLAW similarly highlights that text-to-motion generators produce kinematic
+outputs that need physical grounding, and tracks references in MuJoCo with a
+low-level controller \cite{claw}.
+
+\paragraph{Physics-based humanoid tracking.}
+DeepMimic and AMP established reinforcement-learning approaches for physically
+simulated character imitation and stylized control \cite{deepmimic,amp}. PHC
+scales humanoid imitation and recovery, including noisy references from video
+or language-generated motion \cite{phc}. These works motivate our validation
+gap: a true feasibility claim should evaluate references under a strong learned
+tracking policy, not only an inverse-dynamics score.
+
+\paragraph{Physical plausibility optimization.}
+RoboForge couples text-guided generation and physical plausibility optimization,
+using bidirectional optimization between generator and controller
+\cite{roboforge}. Our study is complementary and narrower: it does not retrain
+the generator or controller, but asks how much quality can be recovered through
+candidate selection alone.
+
+\paragraph{Inference-time scaling.}
+Best-of-$N$ sampling and verifier-guided selection are standard in language
+model reasoning \cite{cobbe,lightman,snell}. We translate this idea to
+humanoid reference generation, replacing the reward model with an
+inverse-dynamics critic.
+
+\paragraph{Text-motion evaluation.}
+Standard text-to-motion benchmarks such as HumanML3D report learned
+text-motion retrieval and distributional metrics: R-Precision, matching score,
+FID, diversity, and multimodality \cite{humanml3d,t2mgpt}. The public
+MotionBricks G1 preview used here exposes a mode/control interface rather than
+a full arbitrary text endpoint, so our prompt-following audit uses weaker
+task-proxy metrics and should not be compared to HumanML3D R-Precision.
+
+\section{Method}
+
+The robot model is the Unitree G1 MuJoCo model with 36-dimensional qpos:
+a floating root plus 29 actuated joints. Given a clip $q_{0:T}$, velocities are
+computed with quaternion-safe MuJoCo differencing and accelerations by finite
+difference. We call \texttt{mj\_inverse} for each transition.
+
+The final method is not fine-tuning MotionBricks and is not motion retargeting:
+it is candidate reranking. We do train neural surrogate critics in side
+experiments to imitate the heuristic score, but those models do not update the
+MotionBricks generator and are not used as the final selected result because
+clip-level neural selection underperforms the heuristic.
+
+The scalar heuristic is
+\[
+\begin{aligned}
+r =&\;35 e(\tau_{95}/\tau_{\max},1.0)
+ + 20 e(F^{root}_{95},10000)\\
+&+ 15 e(M^{root}_{95},2000)
+ + 10 e(\omega_{95},10)\\
+&+ 10 e(\alpha_{95},120)
+ + 10 e(jerk_{mean},1200),
+\end{aligned}
+\]
+where $e(v,t)=\log(1+\max(v-t,0)/t)$. Action labels are implementation labels,
+not safety labels: critic-accept if risk $\leq 25$ and p95 torque/limit
+$\leq 1.25$; critic-review if risk $\leq 80$ and torque/limit $\leq 5$ but not
+critic-accepted; critic-reject otherwise.
+
+Whole-clip best-of-$K$ generates $K$ complete clips and selects the lowest
+online segment-critic score, then evaluates the selected clip with the full
+critic. A 10-batch candidate audit found segment/full winner agreement in all
+audited batches, but this remains a finite sanity check. The main results
+therefore do not constitute an oracle best-of-K upper bound; they measure the
+implemented segment-critic selector.
+
+\section{Experiments}
+
+\paragraph{Main K sweep.}
+The main benchmark evaluates 13 styles, 3 seeds, and $K\in\{1,4,8,16\}$,
+producing 156 selected clips. Table~\ref{tab:ksweep} summarizes the result.
+
+\begin{table}[h]
+\centering
+\caption{Main 39-identity K sweep.}
+\label{tab:ksweep}
+\begin{tabular}{lrrr}
+\toprule
+K & Mean risk & Critic-accept & Critic-reject \\
+\midrule
+1 & 38.90 & 5/39 & 6/39 \\
+4 & 23.24 & 20/39 & 5/39 \\
+8 & 15.93 & 26/39 & 3/39 \\
+16 & 13.61 & 31/39 & 3/39 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{105-identity extension.}
+To reduce dependence on the 39-identity sweep, we evaluate all 15 exposed G1
+demo modes with 7 seeds each for $K=1$ and $K=8$. Table~\ref{tab:extended}
+shows that the effect persists at larger local scale.
+
+\begin{table}[h]
+\centering
+\caption{Extended 105-identity K=1/K=8 comparison.}
+\label{tab:extended}
+\begin{tabular}{lrrrrr}
+\toprule
+Setting & Mean risk & Median risk & Critic-accept & Critic-review & Critic-reject \\
+\midrule
+K=1 & 35.32 & 21.28 & 25 & 67 & 13 \\
+K=8 & 13.58 & 0.00 & 78 & 18 & 9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{guided_extended_k1_vs_k8.png}
+\caption{Extended 105-row K=1/K=8 audit. Best-of-K substantially reduces the
+implemented inverse-dynamics critic risk across upright locomotion and
+expressive modes, while whole-body crawling remains high demand.}
+\label{fig:guided}
+\end{figure}
+
+The paired aggregate reduction is 61.55\%, with 81/105 identities improved.
+By type, aggregate reductions are 86.88\% for locomotion, 93.26\% for
+expressive motions, 40.52\% for whole-body crawling, and -14.38\% for static
+idle. Static regression is expected: stochastic resampling can hurt clips that
+are already low demand.
+
+\paragraph{Prompt/control preservation.}
+The local preview provides discrete G1 demo modes, so the current audit is a
+105-row mode-seed suite, not 100 different behaviors and not a free-form
+text-to-motion benchmark. It contains 15 unique local mode prompts evaluated
+over 7 seeds each. Each row specifies a natural-language description, category,
+target speed, target direction, and expected tags. We evaluate speed,
+direction, staticness, low-posture behavior, and upper-body expressiveness
+proxies.
+
+\begin{table}[h]
+\centering
+\caption{Prompt/control proxy preservation on the 105-row mode-seed audit.}
+\label{tab:prompt}
+\begin{tabular}{lrrrr}
+\toprule
+Setting & Mean align. & Median align. & Speed err. & Displacement \\
+\midrule
+K=1 & 0.583 & 0.544 & 0.266 m/s & 2.416 m \\
+K=8 & 0.568 & 0.562 & 0.245 m/s & 2.356 m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mean paired alignment delta is -0.015; 56/105 pairs stay within -0.05
+alignment of K=1 and 72/105 maintain displacement ratio in [0.5,1.5]. The
+correct interpretation is that best-of-K mostly preserves local mode proxies,
+not that it improves language alignment.
+
+\begin{figure}[t]
+\centering
+\begin{minipage}{0.48\linewidth}
+\centering
+\includegraphics[width=\linewidth]{prompt_alignment_by_category.png}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\linewidth}
+\centering
+\includegraphics[width=\linewidth]{contact_quality_by_category.png}
+\end{minipage}
+\caption{Damage audits. Left: prompt/control proxy scores are roughly preserved
+but not improved by K=8. Right: contact artifacts improve modestly overall and
+more on crawling, but crawling remains problematic.}
+\label{fig:audits}
+\end{figure}
+
+\paragraph{Contact-quality audit.}
+We also evaluate self-contact, non-foot floor contact, foot speed while contact
+persists, and a simple support-proxy diagnostic. The contact artifact score
+improves from 0.274 at K=1 to 0.248 at K=8. Whole-body crawling improves more
+substantially, from 0.654 to 0.489, but remains visibly problematic: non-foot
+floor contact is still 34.7\% at K=8. These metrics help explain visible risk
+in videos but are not controller success metrics.
+
+\paragraph{Boundary audit summary.}
+The main K=8 result lowers critic risk by 61.55\% and raises critic-accept
+labels from 25/105 to 78/105. The prompt/control audit is weaker: mean proxy
+alignment changes from 0.583 to 0.568, so this is a damage audit rather than an
+alignment improvement. The contact audit improves from 0.274 to 0.248 artifact
+score, but it is post-hoc and not part of selection. The controller audit is
+negative: all computed-torque rollouts fall at frame 15.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.72\linewidth]{computed_torque_tracking.png}
+\caption{Controller negative control. The available torque-limited
+computed-torque tracker fails uniformly and does not validate the heuristic
+critic. This is why the paper claims screening/reranking rather than physical
+execution.}
+\label{fig:tracking}
+\end{figure}
+
+\paragraph{Learned-policy audit.}
+To test whether lower inverse-dynamics risk transfers to a learned controller,
+we build the public SONIC G1 deployment stack and run its released
+encoder/decoder ONNX weights in a MuJoCo closed-loop harness. The native binary
+loads our exported references and TensorRT-converts the policy stack, but waits
+for live Unitree \texttt{LowState} DDS messages; for batch evaluation we
+therefore reconstruct the observation path in Python and label it an
+approximate harness.
+
+The corrected result is more nuanced than the earlier buggy run. On 105 paired
+K=1/K=8 references, 98/105 rollouts fall in each group, while idle references
+survive the full 5s window. Mean survival changes from 2.005s for K=1 to
+2.054s for inverse-dynamics-selected K=8, and mean joint RMSE changes from
+0.339 to 0.334 rad. These differences are not significant
+($p=0.159$ for greater survival; $p=0.457$ for lower RMSE), despite the large
+drop in inverse-dynamics heuristic risk.
+
+We then use the 39-identity K sweep, which provides K=1/4/8/16 screened
+variants, as a limited controller-in-the-loop oracle. Selecting the variant
+with longest SONIC survival improves mean survival from 2.134s at K=1 to
+2.833s ($p=1.9{\times}10^{-6}$) and lowers RMSE from 0.328 to 0.286 rad
+($p=0.019$). The fall count remains 36/39 because idle clips survive in all
+settings. This supports the pivot: physical awareness should be measured with
+the target tracking policy in the loop, but the current candidate pool and
+policy interface are not sufficient for a real-robot execution claim.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.86\linewidth]{sonic_policy_multik_selector_fixed.png}
+\caption{Corrected SONIC learned-policy audit over the 39-identity K=1/4/8/16 sweep.
+Inverse-dynamics-selected K values do not monotonically improve closed-loop
+tracking. A controller-aware selector improves short-horizon survival, but
+fall count remains 36/39, so this is evidence for policy-in-the-loop selection
+rather than solved execution.}
+\label{fig:sonic}
+\end{figure}
+
+\paragraph{Ablations and negative controls.}
+Whole-clip K=4 outperforms per-segment K=4 at equal compute on the current
+setup. Gumbel sampling is the strongest diversity source, while seed diversity
+helps expressive motions. A neural window critic reaches high window-level
+agreement with heuristic labels, but neural full-clip selection is worse than
+heuristic selection, so it is not used for final results. Retraining a
+full-clip critic on all 210 extended clips improves validation Spearman
+correlation to 0.747. A larger 3.38M-parameter residual temporal CNN trained
+for 800 epochs on 497 unique labeled clips improves correlation to 0.800, still
+below the 0.85 target for replacing the heuristic selector.
+
+Most importantly, controller validation is currently negative. This is the main
+negative result of the study. The weak PD controller has insignificant per-clip
+correlation with risk (Spearman $\rho=-0.09$). A stronger torque-limited
+computed-torque tracker also fails uniformly at frame 15 and does not improve
+K=8 tracking RMSE. The learned SONIC harness is more relevant: after fixing the
+harness, K=8 has a small non-significant survival/RMSE improvement, while a
+policy-aware selector improves survival and RMSE significantly. Thus lower
+heuristic risk alone is not a validated substitute for closed-loop tracking
+outcomes.
+
+\section{Discussion}
+
+Best-of-$K$ works because MotionBricks has meaningful local candidate diversity:
+different seeds choose different references, and Gumbel sampling changes the
+token trajectory toward a reference. For upright and expressive motions, some
+candidates have lower derivative and torque demand while preserving the broad
+mode label. For crawling, the candidate set remains high demand under the
+current robot model and critic. For idle clips, the correct policy is to skip
+resampling when the first candidate is already low risk.
+
+The main limitation is execution. A publishable physical-execution claim needs
+a strong learned G1 tracking setup or hardware rollout in which selected
+references actually remain upright beyond short horizons and across dynamic
+motions. Our SONIC audit is a first step toward that target: the harness runs,
+but most non-idle clips still fall within 5s. The best next step is
+controller-in-the-loop selection, planner-policy co-training, or preference
+tuning: use controller outcomes to shift the generator distribution, rather
+than relying only on inverse-dynamics rejection sampling.
+
+The prompt-control and contact audits also clarify scope. The method screens
+among local candidates; it does not create new semantic capability, and it does
+not guarantee collision-free or dynamically executable motion. Its strongest
+current use is as a transparent triage layer before expensive controller
+rollout.
+
+\section{Artifacts}
+
+Primary artifacts are:
+\begin{itemize}[leftmargin=*]
+\item \texttt{results/guided\_ablation\_full.csv}
+\item \texttt{results/guided\_ablation\_extended.csv}
+\item \texttt{results/guided\_extended\_k1\_vs\_k8.png}
+\item \texttt{configs/prompt\_suite\_105.csv}
+\item \texttt{results/prompt\_alignment.csv}
+\item \texttt{results/contact\_quality.csv}
+\item \texttt{results/semantic\_preservation.csv}
+\item \texttt{results/computed\_torque\_tracking.csv}
+\item \texttt{results/sonic\_policy\_mujoco\_tracking\_210\_fixed.csv}
+\item \texttt{results/sonic\_policy\_mujoco\_tracking\_k\_sweep\_fixed.csv}
+\item \texttt{results/sonic\_policy\_multik\_selector\_fixed.png}
+\item \texttt{results/videos/comparison/*.mp4}
+\item \texttt{results/videos/sonic\_policy\_multik/*.mp4}
+\item \texttt{results/videos/supplementary/*.mp4}
+\end{itemize}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

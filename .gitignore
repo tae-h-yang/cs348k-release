@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+.pytest_cache/
+.DS_Store
+MUJOCO_LOG.TXT
+*.log
+
+# Large generated trees can be restored from release_assets.
+/data/motionbricks/
+/results/
+
+# External MotionBricks/GR00T clone.
+_groot/
