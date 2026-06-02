@@ -1,0 +1,4 @@
+set,n,physical_pass,sonic_no_fall,both,mean_sonic_seconds,mean_rmse
+all KIMODO references,100,48,53,29,2.854599999999999,0.1559815221730917
+physical-pass subset,48,48,29,29,3.293333333333333,0.17022912443922408
+flagged subset,52,0,24,0,2.4496153846153845,0.14282988931204638

@@ -1,0 +1,10 @@
+category,n,rescues,regressions,original_no_fall,repaired_no_fall
+balance_recovery,12,3,1,9,11
+loco_manipulation,14,1,0,7,8
+dynamic_locomotion,14,1,1,7,7
+communication_safety,8,1,0,4,5
+athletic_stress,8,1,0,0,1
+manipulation_stance,12,0,0,9,9
+dance_expressive,12,0,1,9,8
+terrain_obstacle,8,0,1,7,6
+floor_low_posture,12,0,0,1,1

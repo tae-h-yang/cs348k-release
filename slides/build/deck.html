@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="../">
+  <title>Controller-in-the-Loop Curation for Generated Humanoid Motion</title>
+  <style>
+/* @theme cs348k */
+
+@import 'default';
+
+:root {
+  --ink: #17202a;
+  --muted: #5f6f7a;
+  --blue: #2457a6;
+  --green: #1e7d5a;
+  --orange: #b85c2d;
+  --red: #a93434;
+  --paper: #fbfbf8;
+}
+
+section {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Inter", "Aptos", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0;
+  padding: 54px 66px;
+}
+
+h1 {
+  color: var(--ink);
+  font-size: 52px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+h2 {
+  color: var(--blue);
+  font-size: 34px;
+  letter-spacing: 0;
+}
+
+h3 {
+  color: var(--ink);
+  font-size: 25px;
+}
+
+p, li {
+  font-size: 24px;
+  line-height: 1.34;
+}
+
+strong {
+  color: var(--blue);
+}
+
+em {
+  color: var(--orange);
+}
+
+small {
+  color: var(--muted);
+}
+
+table {
+  font-size: 19px;
+  width: 100%;
+}
+
+th {
+  color: white;
+  background: var(--blue);
+}
+
+td, th {
+  padding: 8px 10px;
+}
+
+img {
+  max-width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+}
+
+section.title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+section.title h1 {
+  font-size: 58px;
+  max-width: 980px;
+}
+
+section.title p {
+  max-width: 920px;
+}
+
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 34px;
+  align-items: start;
+}
+
+.metric {
+  border-left: 5px solid var(--green);
+  padding-left: 16px;
+  margin: 12px 0;
+}
+
+.warn {
+  border-left: 5px solid var(--orange);
+  padding-left: 16px;
+}
+
+.bad {
+  color: var(--red);
+}
+
+.good {
+  color: var(--green);
+}
+
+.caption {
+  color: var(--muted);
+  font-size: 17px;
+  margin-top: 8px;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.video-grid.three {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.video-grid.six {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 14px;
+}
+
+.video-grid.four {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 18px;
+}
+
+.video-grid.five {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 12px;
+}
+
+.video-grid.ten {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px 10px;
+}
+
+.video-grid.seven {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 10px;
+}
+
+.video-card video {
+  width: 100%;
+  max-height: 390px;
+  background: #101820;
+  border: 1px solid #cfd8df;
+}
+
+.video-grid.three .video-card video {
+  max-height: 250px;
+}
+
+.video-grid.six .video-card video {
+  max-height: 145px;
+}
+
+.video-grid.four .video-card video {
+  max-height: 170px;
+}
+
+.video-grid.five .video-card video {
+  max-height: 135px;
+}
+
+.video-grid.ten .video-card video {
+  max-height: 95px;
+}
+
+.video-grid.seven .video-card video {
+  max-height: 92px;
+}
+
+.video-card p {
+  font-size: 18px;
+  line-height: 1.2;
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.video-grid.six .video-card p {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.video-grid.four .video-card p {
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+.video-grid.five .video-card p {
+  font-size: 11px;
+  line-height: 1.08;
+  margin-top: 3px;
+}
+
+.video-grid.ten .video-card p {
+  font-size: 10px;
+  line-height: 1.05;
+  margin-top: 3px;
+}
+
+.video-grid.seven .video-card p {
+  font-size: 10px;
+  line-height: 1.05;
+  margin-top: 3px;
+}
+
+.video-card strong {
+  color: var(--ink);
+}
+
+.hero-video video {
+  width: 100%;
+  max-height: 455px;
+  background: #101820;
+  border: 1px solid #cfd8df;
+}
+
+.small-video video {
+  max-height: 225px;
+}
+
+.paper-figure {
+  width: 100%;
+  max-height: 285px;
+  object-fit: contain;
+  border: 1px solid #cfd8df;
+  background: white;
+}
+
+.refs {
+  position: absolute;
+  left: 66px;
+  right: 66px;
+  bottom: 22px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.refs p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.tight p, .tight li {
+  font-size: 21px;
+}
+
+.compact table {
+  font-size: 17px;
+}
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 24px 0;
+}
+
+.step {
+  background: white;
+  border: 1px solid #cfd8df;
+  padding: 16px;
+  min-height: 130px;
+}
+
+.step strong {
+  display: block;
+  font-size: 25px;
+  margin-bottom: 8px;
+}
+
+.step span {
+  display: block;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.result-grid img {
+  max-height: 410px;
+}
+
+.result-grid table {
+  font-size: 15px;
+}
+
+.result-grid td, .result-grid th {
+  padding: 6px 8px;
+}
+
+.audit-sheet {
+  width: 100%;
+  max-height: 570px;
+  object-fit: contain;
+}
+
+section.failure-stats-slide .failure-stats-layout {
+  margin-top: 12px;
+}
+
+section.failure-stats-slide .failure-stats-layout p {
+  max-width: 930px;
+  margin: 14px 0 14px;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1.28;
+}
+
+.failure-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: 930px;
+}
+
+.failure-stat {
+  border-top: 5px solid var(--blue);
+  background: white;
+  border-left: 1px solid #cfd8df;
+  border-right: 1px solid #cfd8df;
+  border-bottom: 1px solid #cfd8df;
+  padding: 10px 16px 9px;
+}
+
+.failure-stat strong {
+  display: block;
+  color: var(--ink);
+  font-size: 38px;
+  line-height: 0.95;
+}
+
+.failure-stat span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.failure-bars {
+  display: grid;
+  gap: 7px;
+  width: 930px;
+}
+
+.failure-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px;
+  align-items: center;
+  min-height: 33px;
+  padding: 0 12px;
+  border: 1px solid #cfd8df;
+  background: white;
+  overflow: hidden;
+}
+
+.failure-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--value) * 1%);
+  background: color-mix(in srgb, var(--blue) 18%, white);
+}
+
+.failure-bar span,
+.failure-bar b {
+  position: relative;
+  z-index: 1;
+  font-size: 17px;
+}
+
+.failure-bar b {
+  justify-self: end;
+  color: var(--blue);
+}
+
+section.repair-improvement-slide .repair-improvement {
+  display: grid;
+  grid-template-columns: 0.85fr 1.45fr;
+  gap: 20px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.repair-hero {
+  background: white;
+  border: 1px solid #cfd8df;
+  border-top: 6px solid var(--green);
+  padding: 22px 20px 20px;
+  min-height: 215px;
+}
+
+.repair-hero span {
+  display: block;
+  color: var(--muted);
+  font-size: 20px;
+}
+
+.repair-hero strong {
+  display: block;
+  margin-top: 14px;
+  color: var(--ink);
+  font-size: 58px;
+  line-height: 0.95;
+}
+
+.repair-hero em {
+  display: block;
+  margin-top: 18px;
+  color: var(--green);
+  font-size: 20px;
+  font-style: normal;
+  line-height: 1.25;
+}
+
+.repair-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.repair-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 56px 108px;
+  gap: 12px;
+  align-items: center;
+  min-height: 54px;
+  padding: 8px 12px;
+  border: 1px solid #cfd8df;
+  background: white;
+  overflow: hidden;
+}
+
+.repair-row::before,
+.repair-row::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  height: 50%;
+}
+
+.repair-row::before {
+  top: 0;
+  width: calc(var(--before) * 1%);
+  background: color-mix(in srgb, var(--orange) 18%, white);
+}
+
+.repair-row::after {
+  bottom: 0;
+  width: calc(var(--after) * 1%);
+  background: color-mix(in srgb, var(--green) 24%, white);
+}
+
+.repair-label,
+.repair-count,
+.repair-delta,
+.repair-iters {
+  position: relative;
+  z-index: 1;
+}
+
+.repair-label {
+  font-size: 18px;
+}
+
+.repair-count {
+  justify-self: end;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.repair-delta {
+  justify-self: end;
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.repair-iters {
+  justify-self: end;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.wide-figure {
+  display: block;
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  margin: 6px auto 0;
+  border: 1px solid #cfd8df;
+  background: white;
+}
+
+.image-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.image-row img {
+  max-height: 420px;
+}
+
+.mini img {
+  max-height: 230px;
+}
+
+.visual-card img {
+  width: 100%;
+  max-height: 395px;
+  border: 1px solid #cfd8df;
+  background: white;
+}
+
+.flow-img {
+  width: 100%;
+  max-height: 330px;
+  object-fit: contain;
+}
+
+.small-list li {
+  font-size: 20px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.stat {
+  border: 1px solid #cfd8df;
+  padding: 12px;
+  background: white;
+}
+
+.stat strong {
+  display: block;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.stat span {
+  display: block;
+  color: var(--muted);
+  font-size: 15px;
+  margin-top: 6px;
+}
+
+section.limitations-slide .limit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.limit-card {
+  min-height: 135px;
+  border: 1px solid #cfd8df;
+  border-top: 5px solid var(--blue);
+  background: white;
+  padding: 16px 18px;
+}
+
+.limit-card strong {
+  display: block;
+  color: var(--ink);
+  font-size: 23px;
+  line-height: 1.08;
+  margin-bottom: 10px;
+}
+
+.limit-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.24;
+}
+
+section.limitations-slide .metric {
+  margin-top: 18px;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+
+body {
+  margin: 0;
+  background: #222;
+  font-family: Inter, Aptos, Helvetica, Arial, sans-serif;
+}
+.slide {
+  box-sizing: border-box;
+  width: 1280px;
+  height: 720px;
+  margin: 24px auto;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.35);
+}
+.page {
+  position: absolute;
+  right: 24px;
+  bottom: 18px;
+  color: #6b7780;
+  font-size: 16px;
+}
+pre {
+  background: #101820;
+  color: #f2f6f8;
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 18px;
+  overflow: hidden;
+}
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+@media print {
+  body { background: white; }
+  .slide { margin: 0; box-shadow: none; page-break-after: always; }
+}
+  </style>
+</head>
+<body>
+<section class="slide" id="slide-1"><h1>Physical Awareness for Generated Humanoid Motion</h1>
+<p>A test-time physical audit and repair loop for humanoid reference motions</p>
+<p>CS348K Final Project<br>
+Tae Hoon Yang</p><div class="page">1</div></section><section class="slide" id="slide-2"><h2>Major Advances in Humanoid Motion Tracking</h2>
+<div class="cols">
+
+<div>
+
+Modern humanoid trackers can follow high-quality motion clips in physics.
+
+SONIC trains on over 100M frames / 700 hours of high-quality human motion.
+
+The paper describes these motions as retargeted to the humanoid before tracking.
+
+<div class="metric">
+
+Tracking is getting strong. Where do these reference motions come from?
+
+</div>
+
+</div>
+
+<div>
+
+<img class="paper-figure" src="assets/figures/sonic_motion_dataset_samples.jpg" alt="SONIC motion dataset samples" />
+
+<div class="hero-video small-video">
+
+<video src="https://nvlabs.github.io/GEAR-SONIC/static/videos/teaser_title.mp4" poster="assets/video_posters/sonic_official.jpg" autoplay muted loop playsinline preload="metadata"></video>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="refs"><p>Luo et al., "SONIC: Supersizing Motion Tracking for Natural Humanoid Whole-Body Control"</p></div><div class="page">2</div></section><section class="slide" id="slide-3"><h2>KIMODO Makes References Easy To Generate</h2>
+<div class="cols">
+
+<div class="tight">
+
+KIMODO generates G1 reference motions from text and kinematic constraints.
+
+It is trained on 700 hours of production-quality optical mocap.
+
+This gives us a broad 100-prompt humanoid reference-motion suite.
+
+But kinematic generation does not by itself guarantee:
+
+- feasible torques,
+- valid support contacts,
+- prompt correctness,
+- trackability by a learned controller.
+
+<div class="metric">
+
+We insert a physical-awareness screen and repair loop after KIMODO and before tracking.
+
+</div>
+
+</div>
+
+<div class="hero-video">
+
+<video src="assets/videos/kimodo_official/kimodo_g1_text_loco.mp4" poster="assets/video_posters/kimodo_official/kimodo_g1_text_loco.jpg" autoplay muted loop playsinline preload="metadata"></video>
+
+</div>
+
+</div>
+
+<div class="refs"><p>Rempe et al., "Kimodo: Scaling Controllable Human Motion Generation"</p></div><div class="page">3</div></section><section class="slide" id="slide-4"><h2>What Exactly Are We Refining?</h2>
+<div class="cols">
+
+<div>
+
+We refine generated references using failures observed in the G1 trajectory.
+
+Each clip contains root pose and joint angles over time.
+
+From each generated clip, we derive:
+
+- velocity and acceleration,
+- contact diagnostics,
+- SONIC tracking diagnostics.
+
+A prompt can produce a plausible replay and still need a safer reference variant.
+
+</div>
+
+<div class="visual-card">
+
+<video src="assets/videos/kimodo_failures_selected/trackability__hrb_001_forward_walk__sonic_fell3p46s_torque4p29x_rootforce6593N.mp4" poster="assets/video_posters/kimodo_failures_selected/trackability__hrb_001_forward_walk__sonic_fell3p46s_torque4p29x_rootforce6593N.jpg" autoplay muted loop playsinline preload="metadata" style="width:100%; max-height:330px; background:#101820; border:1px solid #cfd8df;"></video>
+
+<div class="caption">Local G1 example: the reference replay looks plausible, but the physics rollout becomes unstable. This failure tag tells the repair loop what kind of variant to try next.</div>
+
+</div>
+
+</div><div class="page">4</div></section><section class="slide" id="slide-5"><h2>Evaluation Questions</h2>
+<p>Success has to be measured twice: first on the reference, then in the controller.</p>
+<p>We ask four questions:</p>
+<ul>
+<li>How many first-pass KIMODO references pass physical rules?</li>
+<li>Which failure tags should drive repair attempts?</li>
+<li>Do refined or lower-risk references survive longer under SONIC?</li>
+<li>Which clips pass both physical rules and controller rollout?</li>
+</ul>
+<p>Metric definitions:</p>
+<ul>
+<li><strong>physical pass:</strong> torque/root-wrench, contact, and support thresholds,</li>
+<li><strong>SONIC no-fall:</strong> full-horizon controller rollout,</li>
+<li><strong>RMSE:</strong> joint tracking error,</li>
+<li><strong>failure tag:</strong> structured context for reference repair.</li>
+</ul>
+<div class="refs"><p>Araujo et al., "Retargeting Matters: General Motion Retargeting for Humanoid Motion Tracking," arXiv:2510.02252.</p></div><div class="page">5</div></section><section class="slide" id="slide-6"><h2>What We Built</h2>
+<div class="cols tight">
+
+<div>
+
+### Baseline
+
+- one generated clip per prompt,
+- KIMODO G1 reference trajectory,
+- no test-time refinement loop.
+
+</div>
+
+<div>
+
+### Our Layer: Screen + Repair
+
+- generate a KIMODO reference,
+- check dynamics/contact/support rules,
+- run SONIC for rollout evidence,
+- try retiming/smoothing repair variants,
+- accept, flag, or reject the reference.
+
+</div>
+
+</div><div class="page">6</div></section><section class="slide" id="slide-7"><h2>Method: Physical-Awareness Loop</h2>
+<div class="pipeline">
+  <div class="step"><strong>1. Generate</strong><span>KIMODO reference from the current text prompt</span></div>
+  <div class="step"><strong>2. Evaluate</strong><span>rules on the reference plus SONIC rollout checks</span></div>
+  <div class="step"><strong>3. Repair</strong><span>retime and smooth candidate reference variants</span></div>
+  <div class="step"><strong>4. Gate</strong><span>accept, flag, or reject after rescoring</span></div>
+</div>
+
+<p><small>No generator or controller fine-tuning here: physics rules and SONIC decide whether a reference variant passes.</small></p><div class="page">7</div></section><section class="slide" id="slide-8"><h2>Repair: Metric-Guided Variants</h2>
+<p>When a candidate fails, the failed metric tells us what kind of reference variant to try.</p>
+<p>Then we rescore the variants with the same physical rules and SONIC gate.</p>
+<table>
+<thead>
+<tr>
+<th>Failure tag</th>
+<th>Repair pressure before rescoring</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>high torque / root wrench</td>
+<td>slower, smoother limb motion; avoid abrupt arm swings or snaps</td>
+</tr>
+<tr>
+<td>self-contact</td>
+<td>keep arms away from torso; avoid crossing legs or shoulders</td>
+</tr>
+<tr>
+<td>non-foot floor contact</td>
+<td>use feet-only support unless the task explicitly says crawl or kneel</td>
+</tr>
+<tr>
+<td>support proxy</td>
+<td>wider stance; planted support foot; smaller center-of-mass shift</td>
+</tr>
+<tr>
+<td>contact artifact</td>
+<td>clean foot placement; avoid dragging or sliding contacts</td>
+</tr>
+<tr>
+<td>trackability failure</td>
+<td>reduce speed and amplitude; make transitions gradual</td>
+</tr>
+</tbody>
+</table>
+<div class="metric">
+
+The repair stays interpretable: every new candidate is tied to the metric that failed.
+
+</div>
+
+<div class="refs"><p>Araujo et al., "Retargeting Matters: General Motion Retargeting for Humanoid Motion Tracking," arXiv:2510.02252.</p></div><div class="page">8</div></section><section class="slide" id="slide-9"><h2>100-Prompt Humanoid Suite</h2>
+<p>KIMODO can attempt the full prompt suite directly on the G1 skeleton.</p>
+<p>We use concrete text prompts, not just motion labels.</p>
+<div class="warn"><strong>Benchmark caveat:</strong> some prompts are beyond current tracker capability, so failure is useful evidence rather than just a bad generation.</div>
+
+<table>
+<thead>
+<tr>
+<th>Family</th>
+<th style="text-align: right;">Count</th>
+<th>Example text prompts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>locomotion + recovery</td>
+<td style="text-align: right;">26</td>
+<td>"Walk forward at a comfortable indoor pace."</td>
+</tr>
+<tr>
+<td>manipulation + loco-manipulation</td>
+<td style="text-align: right;">26</td>
+<td>"Step forward, reach with the right hand as if opening a door."</td>
+</tr>
+<tr>
+<td>floor / low posture</td>
+<td style="text-align: right;">12</td>
+<td>"Crawl forward using hands and feet."</td>
+</tr>
+<tr>
+<td>dance / expressive</td>
+<td style="text-align: right;">12</td>
+<td>"Do an energetic happy dance with bouncing knees."</td>
+</tr>
+<tr>
+<td>athletic + terrain stress</td>
+<td style="text-align: right;">16</td>
+<td>"Perform a small split-squat jump."</td>
+</tr>
+<tr>
+<td>communication / safety</td>
+<td style="text-align: right;">8</td>
+<td>"Stand still and wave the right hand at shoulder height."</td>
+</tr>
+</tbody>
+</table><div class="page">9</div></section><section class="slide" id="slide-10"><h2>Generated Reference Examples</h2>
+<div class="video-grid six">
+
+<div class="video-card">
+<video src="assets/videos/kimodo_reference_family_examples/hrb_001_forward_walk_forward_walk_reference.mp4" poster="assets/video_posters/kimodo_reference_family_examples/hrb_001_forward_walk_forward_walk_reference.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>locomotion + recovery</strong><br/>forward_walk</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_reference_family_examples/hrb_056_open_door_open_door_reference.mp4" poster="assets/video_posters/kimodo_reference_family_examples/hrb_056_open_door_open_door_reference.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>manipulation + loco-manipulation</strong><br/>open_door</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_reference_family_examples/hrb_027_hand_crawl_hand_crawl_reference.mp4" poster="assets/video_posters/kimodo_reference_family_examples/hrb_027_hand_crawl_hand_crawl_reference.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>floor / low posture</strong><br/>hand_crawl</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_reference_family_examples/hrb_018_happy_dance_happy_dance_reference.mp4" poster="assets/video_posters/kimodo_reference_family_examples/hrb_018_happy_dance_happy_dance_reference.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>dance / expressive</strong><br/>happy_dance</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_reference_family_examples/hrb_097_split_squat_jump_split_squat_jump_reference.mp4" poster="assets/video_posters/kimodo_reference_family_examples/hrb_097_split_squat_jump_split_squat_jump_reference.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>athletic + terrain stress</strong><br/>split_squat_jump</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_reference_family_examples/hrb_077_wave_wave_reference.mp4" poster="assets/video_posters/kimodo_reference_family_examples/hrb_077_wave_wave_reference.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>communication / safety</strong><br/>wave</p>
+</div>
+
+</div>
+
+<div class="caption">Reference-only KIMODO outputs rendered on the G1 mesh. No physics rollout is shown on this slide.</div><div class="page">10</div></section><section class="slide" id="slide-11"><h2>First-Pass References Can Already Track</h2>
+<div class="video-grid six">
+
+<div class="video-card">
+<video src="assets/videos/kimodo_success_selected/success__hrb_008_broad_jump__physical_pass_sonic_no_fall.mp4" poster="assets/video_posters/kimodo_success_selected/success__hrb_008_broad_jump__physical_pass_sonic_no_fall.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>broad_jump</strong><br/>physical pass + SONIC no-fall</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_success_selected/success__hrb_030_crab_walk__physical_pass_sonic_no_fall.mp4" poster="assets/video_posters/kimodo_success_selected/success__hrb_030_crab_walk__physical_pass_sonic_no_fall.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>crab_walk</strong><br/>physical pass + SONIC no-fall</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_success_selected/success__hrb_043_wipe_table__physical_pass_sonic_no_fall.mp4" poster="assets/video_posters/kimodo_success_selected/success__hrb_043_wipe_table__physical_pass_sonic_no_fall.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>wipe_table</strong><br/>physical pass + SONIC no-fall</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_success_selected/success__hrb_080_point_right__physical_pass_sonic_no_fall.mp4" poster="assets/video_posters/kimodo_success_selected/success__hrb_080_point_right__physical_pass_sonic_no_fall.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>point_right</strong><br/>physical pass + SONIC no-fall</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_success_candidates_review/success__hrb_041_reach_overhead__physical_pass_no_fall.mp4" poster="assets/video_posters/kimodo_success_candidates_review/success__hrb_041_reach_overhead__physical_pass_no_fall.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>reach_overhead</strong><br/>physical pass + SONIC no-fall</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_success_selected/success__hrb_065_single_leg_balance_right__physical_pass_sonic_no_fall.mp4" poster="assets/video_posters/kimodo_success_selected/success__hrb_065_single_leg_balance_right__physical_pass_sonic_no_fall.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>single_leg_balance</strong><br/>physical pass + SONIC no-fall</p>
+</div>
+
+</div>
+
+<div class="caption">Six generated references pass the physical rules and complete SONIC immediately. Red ghost = reference; solid G1 = controller rollout.</div><div class="page">11</div></section><section class="slide" id="slide-12"><h2>First-Pass KIMODO Audit</h2>
+<div class="result-grid">
+
+<div>
+
+![kimodo audit summary](assets/figures/kimodo_audit_summary.png)
+
+</div>
+
+<div>
+
+| Set | Physical Pass | SONIC No-Fall | Mean SONIC Sec. | Mean RMSE |
+|---|---:|---:|---:|---:|
+| all KIMODO refs | 48/100 | 53/100 | 2.855 | 0.156 |
+| physical-pass subset | 48/48 | 29/48 | 3.293 | 0.170 |
+| flagged subset | 0/52 | 24/52 | 2.450 | 0.143 |
+
+<div class="metric">Controller check: 29/48 physical-pass references also complete SONIC; flagged references complete less often and track for less time.</div>
+
+</div>
+
+</div>
+
+<div class="caption">Full 100-prompt KIMODO run. Failure tags identify references that need repair or rejection before deployment.</div><div class="page">12</div></section><section class="slide" id="slide-13"><h2>Generated Failure Modes</h2>
+<div class="video-grid six">
+
+<div class="video-card">
+<video src="assets/videos/appendix_metric_failures/torque_demand__hrb_094_forward_roll.mp4" poster="assets/video_posters/presentation_failure_modes/torque_demand__hrb_094_forward_roll__late.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>Torque/root wrench</strong><br/>forward_roll, 16.7x</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_failures_selected/self_contact__hrb_005_turn_in_place__selfcontact75pct_torque18p86x.mp4" poster="assets/video_posters/presentation_failure_modes/self_contact__hrb_005_turn_in_place__selfcontact75pct_torque18p86x__late.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>Self-contact</strong><br/>turn_in_place</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/appendix_metric_failures/nonfoot_floor__hrb_098_knee_slide.mp4" poster="assets/video_posters/presentation_failure_modes/nonfoot_floor__hrb_098_knee_slide__late.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>Non-foot floor</strong><br/>knee_slide</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_failure_candidates_review/support_proxy__hrb_085_step_over_right__support14pct.mp4" poster="assets/video_posters/presentation_failure_modes/support_proxy__hrb_085_step_over_right__support14pct__late.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>Support proxy</strong><br/>step_over_right</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_failure_candidates_review/trackability__hrb_051_carry_box__fell2p78s.mp4" poster="assets/video_posters/presentation_failure_modes/trackability__hrb_051_carry_box__fell2p78s__late.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>Trackability</strong><br/>carry_box</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/appendix_metric_failures/contact_support__hrb_018_happy_dance.mp4" poster="assets/video_posters/presentation_failure_modes/contact_support__hrb_018_happy_dance__late.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>Contact artifact</strong><br/>happy_dance</p>
+</div>
+
+</div>
+
+<div class="caption">KIMODO references replayed through SONIC. Red ghost = reference; solid G1 = rollout. Failure labels come from metrics.</div><div class="page">13</div></section><section class="slide" id="slide-14"><h2>Failure Stats Across 100 KIMODO Clips</h2>
+<div class="failure-stats-layout">
+
+<div class="failure-summary">
+  <div class="failure-stat">
+    <strong>52</strong>
+    <span>physical-rule fail</span>
+  </div>
+  <div class="failure-stat">
+    <strong>47</strong>
+    <span>SONIC fall</span>
+  </div>
+  <div class="failure-stat">
+    <strong>66</strong>
+    <span>torque limit &gt;1x</span>
+  </div>
+</div>
+
+<p>Failure flags are non-exclusive: one clip can violate actuation, contact, and controller tracking.</p>
+
+<div class="failure-bars">
+  <div class="failure-bar" style="--value:52"><span>physical-rule fail</span><b>52</b></div>
+  <div class="failure-bar" style="--value:47"><span>SONIC fall</span><b>47</b></div>
+  <div class="failure-bar" style="--value:66"><span>torque limit &gt;1x</span><b>66</b></div>
+  <div class="failure-bar" style="--value:28"><span>high root force &gt;5kN</span><b>28</b></div>
+  <div class="failure-bar" style="--value:34"><span>self-contact &gt;8%</span><b>34</b></div>
+  <div class="failure-bar" style="--value:15"><span>contact artifact &gt;0.45</span><b>15</b></div>
+  <div class="failure-bar" style="--value:11"><span>non-foot floor contact</span><b>11</b></div>
+  <div class="failure-bar" style="--value:10"><span>floor penetration &gt;8cm</span><b>10</b></div>
+  <div class="failure-bar" style="--value:7"><span>low foot support</span><b>7</b></div>
+</div>
+
+</div><div class="page">14</div></section><section class="slide" id="slide-15"><h2>Deterministic Repair Helps Some Clips</h2>
+<div class="repair-improvement">
+
+<div class="repair-hero">
+  <span>SONIC no-fall</span>
+  <strong>53 &rarr; 56</strong>
+  <em>7 rescues, 4 regressions in the repair pass</em>
+</div>
+
+<div class="repair-rows">
+  <div class="repair-row" style="--before:48; --after:53">
+    <span class="repair-label">physical pass</span>
+    <span class="repair-count">48 &rarr; 53</span>
+    <span class="repair-delta">+5</span>
+    <span class="repair-iters">100 clips</span>
+  </div>
+  <div class="repair-row" style="--before:47; --after:54">
+    <span class="repair-label">critic accept</span>
+    <span class="repair-count">47 &rarr; 54</span>
+    <span class="repair-delta">+7</span>
+    <span class="repair-iters">100 clips</span>
+  </div>
+  <div class="repair-row" style="--before:18; --after:16">
+    <span class="repair-label">reject / regenerate</span>
+    <span class="repair-count">18 &rarr; 16</span>
+    <span class="repair-delta">-2</span>
+    <span class="repair-iters">100 clips</span>
+  </div>
+  <div class="repair-row" style="--before:42; --after:38">
+    <span class="repair-label">mean risk</span>
+    <span class="repair-count">41.5 &rarr; 37.9</span>
+    <span class="repair-delta">-3.6</span>
+    <span class="repair-iters">lower is better</span>
+  </div>
+  <div class="repair-row" style="--before:16; --after:14">
+    <span class="repair-label">mean RMSE</span>
+    <span class="repair-count">0.156 &rarr; 0.142</span>
+    <span class="repair-delta">-0.014</span>
+    <span class="repair-iters">lower is better</span>
+  </div>
+</div>
+
+</div>
+
+<div class="caption">Repair baseline: deterministic retiming/smoothing variants selected by the same physical-awareness critic and SONIC gate.</div><div class="page">15</div></section><section class="slide" id="slide-16"><h2>Real Repair Rescues</h2>
+<div class="video-grid three">
+
+<div class="video-card">
+<video src="assets/videos/kimodo_repair_rescues_presentation/rescue_preview__dynamic_locomotion__hrb_001_forward_walk__trim_end1s.mp4" poster="assets/video_posters/kimodo_repair_rescues_presentation/rescue_preview__dynamic_locomotion__hrb_001_forward_walk__trim_end1s.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>forward_walk</strong><br/>caught: trackability<br/>prompt: slower, smoother steps</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_repair_rescues/rescue__communication_safety__hrb_077_wave__3p86s_to_4p00s.mp4" poster="assets/video_posters/kimodo_repair_rescues/rescue__communication_safety__hrb_077_wave__3p86s_to_4p00s.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>wave</strong><br/>caught: torque / tracking<br/>prompt: planted feet, smooth arm</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_repair_rescues_presentation/rescue_preview__athletic_stress__hrb_097_split_squat_jump__trim_end1s.mp4" poster="assets/video_posters/kimodo_repair_rescues_presentation/rescue_preview__athletic_stress__hrb_097_split_squat_jump__trim_end1s.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>split_squat_jump</strong><br/>caught: support / torque<br/>prompt: smaller jump, soft landing</p>
+</div>
+
+</div>
+<div class="caption">Three representative repair previews. Left side is original KIMODO, right side is repaired. Within each panel: red ghost = reference; solid G1 = physics rollout.</div><div class="page">16</div></section><section class="slide" id="slide-17"><h2>Additional Repair Evidence</h2>
+<div class="video-grid three">
+
+<div class="video-card">
+<video src="assets/videos/kimodo_repair_rescues/pushup_pose_height_offset_demo.mp4" poster="assets/video_posters/kimodo_repair_rescues/pushup_pose_height_offset_demo.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>pushup_pose</strong><br/>height-clearance demo<br/>repair pressure: lift torso</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/appendix_repair_by_category/dance_expressive/repair_delta__hrb_018_happy_dance__no_to_no.mp4" poster="assets/video_posters/appendix_repair_by_category/dance_expressive/repair_delta__hrb_018_happy_dance__no_to_no.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>happy_dance</strong><br/>risk reduction, still flagged<br/>repair pressure: clean foot placement</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/kimodo_repair_rescues/rescue__balance_recovery__hrb_070_backward_recovery__3p38s_to_4p00s.mp4" poster="assets/video_posters/kimodo_repair_rescues/rescue__balance_recovery__hrb_070_backward_recovery__3p38s_to_4p00s.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>backward_recovery</strong><br/>support-proxy rescue<br/>repair pressure: smaller lean</p>
+</div>
+
+</div>
+<div class="caption">Supporting examples, not all SONIC rescues. Red ghost = reference; solid G1 = rollout or visual repair proxy.</div><div class="page">17</div></section><section class="slide" id="slide-18"><h2>Boundary: What Still Fails</h2>
+<div class="video-grid three">
+
+<div class="video-card">
+<video src="assets/videos/appendix_metric_failures/torque_demand__hrb_094_forward_roll.mp4" poster="assets/video_posters/appendix_metric_failures/torque_demand__hrb_094_forward_roll.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>forward_roll</strong><br/>torque/root wrench</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/appendix_metric_failures/sonic_trackability__hrb_051_carry_box.mp4" poster="assets/video_posters/appendix_metric_failures/sonic_trackability__hrb_051_carry_box.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>carry_box</strong><br/>controller trackability</p>
+</div>
+
+<div class="video-card">
+<video src="assets/videos/boundary_still_fails/cartwheel_attempt_repaired_right.mp4" poster="assets/video_posters/boundary_still_fails/cartwheel_attempt_repaired_right.jpg" autoplay muted loop playsinline preload="metadata"></video>
+<p><strong>cartwheel_attempt</strong><br/>torque/root wrench</p>
+</div>
+
+</div>
+
+<div class="warn">Still unsolved: arbitrary text-to-robot motion; robust acrobatics and low postures; automatic repair for every invalid reference.</div><div class="page">18</div></section><section class="slide" id="slide-19"><h2>Limitations</h2>
+<div class="limit-grid">
+
+<div class="limit-card">
+<strong>Reference repair is useful, not enough</strong>
+<span>Retiming and smoothing can rescue some clips. Stronger text-to-motion stability likely needs fine-tuning or a learned motion-level refiner.</span>
+</div>
+
+<div class="limit-card">
+<strong>Tracker-as-foundation is an assumption</strong>
+<span>We treat SONIC as a foundation motion tracker, but uncovered motions remain a weak point. Dataset coverage still matters.</span>
+</div>
+
+<div class="limit-card">
+<strong>Trackability is still hard to certify</strong>
+<span>If a generated reference fails, deciding whether RL could learn to track it is a harder problem than our test-time metric screen.</span>
+</div>
+
+<div class="limit-card">
+<strong>Iteration has deployment cost</strong>
+<span>Repair and audit take extra test-time iterations, but catching infeasible motion before controller execution is still important for real-world deployment.</span>
+</div>
+
+</div>
+
+<div class="metric">Main point: metric-guided reference repair can reject or improve generated references, but it does not replace better generators, broader tracker training, or deployment-time safety checks.</div><div class="page">19</div></section>
+</body>
+</html>
