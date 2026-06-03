@@ -51,6 +51,9 @@ trained to track diverse reference motions under physics. SONIC is a strong
 example: it trains a Unitree G1 whole-body controller on over 100M frames / 700
 hours of high-quality human motion \cite{sonic}. At the input level, the
 tracker receives a target trajectory: root pose and joint targets over time.
+This follows a broader line of physics-based motion imitation and reusable
+skill learning, including DeepMimic \cite{deepmimic}, AMP \cite{amp},
+Perpetual Humanoid Control \cite{phc}, ASE \cite{ase}, and CALM \cite{calm}.
 
 The upstream question is where those references come from. KIMODO generates
 controllable kinematic human and robot motions from text prompts and
@@ -61,6 +64,11 @@ torques, require impossible support, create self-collisions, drag contacts, or
 destabilize a learned controller. This reference-quality issue is also central
 to motion-retargeting work such as GMR, which studies how retargeting artifacts
 affect downstream humanoid tracking policies \cite{gmr}.
+The text-to-motion side has also advanced through datasets and generators such
+as HumanML3D \cite{humanml3d}, T2M-GPT \cite{t2mgpt}, MDM \cite{mdm},
+MotionDiffuse \cite{motiondiffuse}, and MoMask \cite{momask}; this project
+asks what happens when such generated references are handed to a physics
+tracker rather than only rendered kinematically.
 
 The project question is:
 \begin{quote}

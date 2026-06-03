@@ -53,6 +53,15 @@ not train a new controller, and does not certify hardware safety. It tests
 whether metric-derived failure tags can make generated references easier to
 screen, repair, reject, and explain.
 
+The project sits between two related lines of work. Physics-based imitation and
+control methods such as DeepMimic, AMP, Perpetual Humanoid Control, ASE, CALM,
+SONIC, and GMR show how reference motions, retargeting quality, and tracking
+controllers interact under simulation. Text-to-motion systems and datasets such
+as HumanML3D, T2M-GPT, MDM, MotionDiffuse, MoMask, and KIMODO make it easier to
+author diverse kinematic references. This report focuses on the interface
+between those lines: what happens when generated references are handed to a
+physics tracker and screened with test-time diagnostics.
+
 ## System
 
 The final system is a test-time reference screening and repair loop:
@@ -311,11 +320,47 @@ the generator is steered by trackability earlier.
 
 ## References
 
-- Rempe et al. **Kimodo: Scaling Controllable Human Motion Generation.**
+- Davis Rempe, Mathis Petrovich, Ye Yuan, Haotian Zhang, Xue Bin Peng, Yifeng
+  Jiang, Tingwu Wang, Umar Iqbal, David Minor, Michael de Ruyter, Jiefeng Li,
+  Chen Tessler, Edy Lim, Eugene Jeong, Sam Wu, Ehsan Hassani, Michael Huang,
+  Jin-Bey Yu, Chaeyeon Chung, Lina Song, Olivier Dionne, Jan Kautz, Simon Yuen,
+  and Sanja Fidler. **Kimodo: Scaling Controllable Human Motion Generation.**
   NVIDIA Research / arXiv, 2026.
-- Luo et al. **SONIC: Supersizing Motion Tracking for Natural Humanoid
+- Zhengyi Luo, Ye Yuan, Tingwu Wang, Chenran Li, Sirui Chen, Fernando
+  Castaneda, Zi-Ang Cao, Jiefeng Li, David Minor, Qingwei Ben, Xingye Da, Runyu
+  Ding, Cyrus Hogg, Lina Song, Edy Lim, Eugene Jeong, Tairan He, Haoru Xue,
+  Wenli Xiao, Zi Wang, Simon Yuen, Jan Kautz, Yan Chang, Umar Iqbal, Linxi Fan,
+  and Yuke Zhu. **SONIC: Supersizing Motion Tracking for Natural Humanoid
   Whole-Body Control.** NVIDIA Research / arXiv, 2025.
-- Araujo et al. **Retargeting Matters: General Motion Retargeting for
-  Humanoid Motion Tracking.** arXiv:2510.02252, 2025.
+- Joao Pedro Araujo, Yanjie Ze, Pei Xu, Jiajun Wu, and C. Karen Liu.
+  **Retargeting Matters: General Motion Retargeting for Humanoid Motion
+  Tracking.** arXiv:2510.02252, 2025.
+- Xue Bin Peng, Pieter Abbeel, Sergey Levine, and Michiel van de Panne.
+  **DeepMimic: Example-Guided Deep Reinforcement Learning of Physics-Based
+  Character Skills.** ACM Transactions on Graphics, 2018.
+- Xue Bin Peng, Ze Ma, Pieter Abbeel, Sergey Levine, and Angjoo Kanazawa.
+  **AMP: Adversarial Motion Priors for Stylized Physics-Based Character
+  Control.** ACM Transactions on Graphics, 2021.
+- Zhengyi Luo, Jinkun Cao, Alexander Winkler, Kris Kitani, and Weipeng Xu.
+  **Perpetual Humanoid Control for Real-time Simulated Avatars.** ICCV, 2023.
+- Xue Bin Peng, Yunrong Guo, Lina Halper, Sergey Levine, and Sanja Fidler.
+  **ASE: Large-Scale Reusable Adversarial Skill Embeddings for Physically
+  Simulated Characters.** ACM Transactions on Graphics, 2022.
+- Chen Tessler, Yoni Kasten, Yunrong Guo, Shie Mannor, Gal Chechik, and Xue Bin
+  Peng. **CALM: Conditional Adversarial Latent Models for Directable Virtual
+  Characters.** ACM SIGGRAPH Conference Proceedings, 2023.
+- Chuan Guo, Shihao Zou, Xinxin Zuo, Sen Wang, Wei Ji, Xingyu Li, and Li Cheng.
+  **Generating Diverse and Natural 3D Human Motions from Text.** CVPR, 2022.
+- Jianrong Zhang, Yangsong Zhang, Xiaodong Cun, Yong Zhang, Hongwei Zhao,
+  Hongtao Lu, Xi Shen, and Ying Shan. **Generating Human Motion From Textual
+  Descriptions With Discrete Representations.** CVPR, 2023.
+- Guy Tevet, Sigal Raab, Brian Gordon, Yonatan Shafir, Daniel Cohen-Or, and
+  Amit H. Bermano. **Human Motion Diffusion Model.** ICLR, 2023.
+- Mingyuan Zhang, Zhongang Cai, Liang Pan, Fangzhou Hong, Xinying Guo, Lei Yang,
+  and Ziwei Liu. **MotionDiffuse: Text-Driven Human Motion Generation With
+  Diffusion Model.** IEEE Transactions on Pattern Analysis and Machine
+  Intelligence, 2024.
+- Chuan Guo, Yuxuan Mu, Muhammad Gohar Javed, Sen Wang, and Li Cheng.
+  **MoMask: Generative Masked Modeling of 3D Human Motions.** CVPR, 2024.
 - Todorov, Erez, and Tassa. **MuJoCo: A Physics Engine for Model-Based
   Control.** IROS, 2012.
