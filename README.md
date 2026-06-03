@@ -3,13 +3,13 @@
 **Paper PDF:** [paper/main.pdf](paper/main.pdf)  
 **Full report Markdown:** [docs/final_report.md](docs/final_report.md)
 
-<img src="assets/readme/final-report-page-1.jpg" alt="Final report page 1" width="900">
-<img src="assets/readme/final-report-page-2.jpg" alt="Final report page 2" width="900">
-<img src="assets/readme/final-report-page-3.jpg" alt="Final report page 3" width="900">
-<img src="assets/readme/final-report-page-4.jpg" alt="Final report page 4" width="900">
-<img src="assets/readme/final-report-page-5.jpg" alt="Final report page 5" width="900">
-<img src="assets/readme/final-report-page-6.jpg" alt="Final report page 6" width="900">
-<img src="assets/readme/final-report-page-7.jpg" alt="Final report page 7" width="900">
+<img src="assets/readme/final-report-ordered-page-1.jpg" alt="Final report page 1" width="900">
+<img src="assets/readme/final-report-ordered-page-2.jpg" alt="Final report page 2" width="900">
+<img src="assets/readme/final-report-ordered-page-3.jpg" alt="Final report page 3" width="900">
+<img src="assets/readme/final-report-ordered-page-4.jpg" alt="Final report page 4" width="900">
+<img src="assets/readme/final-report-ordered-page-5.jpg" alt="Final report page 5" width="900">
+<img src="assets/readme/final-report-ordered-page-6.jpg" alt="Final report page 6" width="900">
+<img src="assets/readme/final-report-ordered-page-7.jpg" alt="Final report page 7" width="900">
 
 # CS348K Final Release
 
