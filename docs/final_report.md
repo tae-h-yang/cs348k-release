@@ -315,5 +315,7 @@ the generator is steered by trackability earlier.
   NVIDIA Research / arXiv, 2026.
 - Luo et al. **SONIC: Supersizing Motion Tracking for Natural Humanoid
   Whole-Body Control.** NVIDIA Research / arXiv, 2025.
+- Araujo et al. **Retargeting Matters: General Motion Retargeting for
+  Humanoid Motion Tracking.** arXiv:2510.02252, 2025.
 - Todorov, Erez, and Tassa. **MuJoCo: A Physics Engine for Model-Based
   Control.** IROS, 2012.

@@ -58,7 +58,9 @@ constraints \cite{kimodo}. This makes it a natural source of candidate
 references for robot training and controller testing. However, a kinematic
 reference is not automatically physically executable. It may demand unrealistic
 torques, require impossible support, create self-collisions, drag contacts, or
-destabilize a learned controller.
+destabilize a learned controller. This reference-quality issue is also central
+to motion-retargeting work such as GMR, which studies how retargeting artifacts
+affect downstream humanoid tracking policies \cite{gmr}.
 
 The project question is:
 \begin{quote}
